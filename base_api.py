@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Allows for access to the base API and fascilitates extraction.
 """
@@ -7,7 +6,7 @@ import requests
 
 BASE_ID = "appWNQwSNORmWZJQH"
 TABLE_NAME = "Robot Data"
-API_KEY = "keyquD11xV0tMOZxM"
+API_KEY = input("Enter Airtable API Key: ")
 
 URL = (
     "https://api.airtable.com/v0/" + BASE_ID + "/" + TABLE_NAME + "?api_key=" + API_KEY

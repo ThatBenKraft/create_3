@@ -5,43 +5,10 @@ In this example we will get data from Airtable.
 """
 import time
 
+import base_api
 import rclpy  # imports rclpy client library # type: ignore
-import requests  # you may need to run 'pip install requests' to install this library
 from geometry_msgs.msg import Twist  # type:ignore
 from rclpy.node import Node  # type: ignore
-
-""" This function makes a get request to the airtable API which will tell us how fast to spin the wheels"""
-
-BASE_ID = "appWNQwSNORmWZJQH"
-TABLE_NAME = "Robot Data"
-API_KEY = "keyquD11xV0tMOZxM"
-
-URL = (
-    "https://api.airtable.com/v0/" + BASE_ID + "/" + TABLE_NAME + "?api_key=" + API_KEY
-)
-
-"""
-The get request data comes in as a json package. We will convert this json package to a python dictionary so that it can be parsed
-"""
-
-# And this is what you call excessive type-hinting
-def get_api_velocities() -> tuple[dict[str, float], ...]:
-    """
-    Acquires X, Y, and Z components of linear and rotational velocities from
-    API.
-    """
-    # Acquires raw data from url
-    raw_records: list[dict[str, dict[str, str]]] = requests.get(URL).json()["records"]
-    # print(data)
-    new_records = []
-    for record in raw_records:
-        # Grads record field and gets rid of name
-        important_data = record["fields"]
-        important_data.pop("Name")
-        # Creates new dictionary with new
-        new_records.append({k: float(v) for k, v in important_data.items()})
-
-    return tuple(new_records)
 
 
 # Creates SimplePublisher class which is a subclass of Node
@@ -61,27 +28,25 @@ class SimplePublisher(Node):
         # Creates a publisher based on the message type "String" that has been imported from the std_msgs module above
         self.publisher_ = self.create_publisher(Twist, MOTOR_CHANNEL, 10)
 
-        # Set delay in seconds
-        # TIMER_PERIOD = 1
-
-        # Creates a timer that triggers a callback function after the set timer_period
-        # self.timer = self.create_timer(TIMER_PERIOD, self.timer_callback)
-
         # Sets initial counter to zero
         self.counter = 0
 
     def publish_velocities(self):
+        # Gets velocity components from API
+        linear, angular = base_api.get_velocities("Linear", "Angular")
 
-        linear, rotational = get_api_velocities()
+        LINEAR_FACTOR = 0.2
+        ROTATIONAL_FACTOR = 2.0
 
         curr_twist: Twist = Twist()
-        curr_twist.linear.x = linear["X"]
+        # Defines linear velocity components
+        curr_twist.linear.x = linear * LINEAR_FACTOR
         curr_twist.linear.y = 0.0
         curr_twist.linear.z = 0.0
-
+        # Defines angular velocity components
         curr_twist.angular.x = 0.0
         curr_twist.angular.y = 0.0
-        curr_twist.angular.z = rotational["Z"]
+        curr_twist.angular.z = angular * ROTATIONAL_FACTOR
 
         # Publishes `msg` to topic
         self.publisher_.publish(curr_twist)

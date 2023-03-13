@@ -4,6 +4,15 @@ Allows for access to the base API and fascilitates extraction.
 
 import requests
 
+__author__ = "Ben Kraft"
+__copyright__ = "None"
+__credits__ = "Ben Kraft"
+__license__ = "MIT"
+__version__ = "1.0"
+__maintainer__ = "Ben Kraft"
+__email__ = "benjamin.kraft@tufts.edu"
+__status__ = "Prototype"
+
 # Defines Airtable information
 BASE_ID = "appWNQwSNORmWZJQH"
 TABLE_NAME = "Robot Data"

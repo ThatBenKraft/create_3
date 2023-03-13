@@ -1,8 +1,7 @@
 """
-by Maddie Pero 
-
-In this example we will get data from Airtable.
+Acquires information from Airtable API and publishes to Create3 motor channel.
 """
+
 import time
 
 import base_api
@@ -10,8 +9,16 @@ import rclpy  # imports rclpy client library # type: ignore
 from geometry_msgs.msg import Twist  # type:ignore
 from rclpy.node import Node  # type: ignore
 
+__author__ = "Ben Kraft"
+__copyright__ = "None"
+__credits__ = "Ben Kraft, Maddie Pero"
+__license__ = "MIT"
+__version__ = "1.0"
+__maintainer__ = "Ben Kraft"
+__email__ = "benjamin.kraft@tufts.edu"
+__status__ = "Prototype"
 
-# Creates SimplePublisher class which is a subclass of Node
+
 class SimplePublisher(Node):
     """
     Allows for node to push information on motor channel.
@@ -58,6 +65,9 @@ class SimplePublisher(Node):
 
 
 def main() -> None:
+    """
+    Runs default publisher actions.
+    """
     # Initializes ROS2 communication and allows Nodes to be created
     rclpy.init(args=None)
     # Creates the SimplePublisher Node using the motor control channel

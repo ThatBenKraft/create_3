@@ -26,42 +26,45 @@ def main():
     """
     Runs default actions.
     """
-    filenames = (
+    filepaths = (
         os.path.join("Samples", "nothing.jpg"),
         os.path.join("Samples", "case.jpg"),
         os.path.join("Samples", "bottle.jpg"),
     )
+    # Creates image model
+    model = ImageModel("keras_model.h5", CLASS_DIRECTIONS)
+    # For each filepath
+    for filepath in filepaths:
 
-    # Load the model
-    model: Model = load_model("keras_model.h5")  # type:ignore
-    model.compile(
-        loss="binary_crossentropy",
-        optimizer="rmsprop",
-        metrics=["accuracy"],
-    )
-
-    for filename in filenames:
-
-        print(predict_direction(model, filename, CLASS_DIRECTIONS))
+        print(model.predict_direction(filepath))
 
 
-def predict_direction(
-    model: Model, filename: str, class_directions: dict[str, int]
-) -> int:
-    """
-    Uses model to predict which direction the image file corresponds to.
-    Returns an integer representing a direction.
-    """
-    # Acquires image info in correct format
-    image_data = load_image(filename)
-    # Makes a prediction with model
-    prediction: ndarray = model.predict(image_data)
-    # Finds index of greatest probability
-    predicted_class_index = int(np.argmax(prediction))
-    # Makes a list of classes from keys to allow for indexing
-    classes = tuple(class_directions.keys())
-    # Acquires corresponding direction from class list
-    return class_directions[classes[predicted_class_index]]
+class ImageModel:
+    def __init__(self, filepath: str, class_directions: dict[str, int]) -> None:
+        model: Model = load_model(filepath)  # type:ignore
+        model.compile(
+            loss="binary_crossentropy",
+            optimizer="rmsprop",
+            metrics=["accuracy"],
+        )
+        self.model = model
+        self.class_directions = class_directions
+
+    def predict_direction(self, filepath: str) -> int:
+        """
+        Predicts which direction the image file corresponds to. Returns an
+        integer representing a direction.
+        """
+        # Acquires image info in correct format
+        image_data = load_image(filepath)
+        # Makes a prediction with model
+        prediction: ndarray = self.model.predict(image_data)
+        # Finds index of greatest probability
+        predicted_class_index = int(np.argmax(prediction))
+        # Makes a list of classes from keys to allow for indexing
+        classes = tuple(self.class_directions.keys())
+        # Acquires corresponding direction from class list
+        return self.class_directions[classes[predicted_class_index]]
 
 
 def load_image(filename: str, display: bool = False) -> np.ndarray:

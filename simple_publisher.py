@@ -20,7 +20,7 @@ __email__ = "benjamin.kraft@tufts.edu"
 __status__ = "Prototype"
 
 
-class VelocityPublisher(Node):
+class MotorPublisher(Node):
     """
     Allows for node to push information on motor channel.
     """
@@ -69,7 +69,7 @@ def main() -> None:
     # Initializes ROS2 communication and allows Nodes to be created
     rclpy.init(args=None)
     # Creates the SimplePublisher Node using the motor control channel
-    simple_publisher = VelocityPublisher()
+    simple_publisher = MotorPublisher()
     try:
         # Defines factors
         LINEAR_FACTOR = 0.2

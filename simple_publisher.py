@@ -18,27 +18,24 @@ class SimplePublisher(Node):
     """
 
     # Defines class constructor
-    def __init__(self) -> None:
-
+    def __init__(self, channel: str) -> None:
         # Initializes and gives Node the name simple_publisher and inherits the Node class's attributes by using 'super()'
         super().__init__("simple_publisher")
-
-        MOTOR_CHANNEL = "cmd_vel"
-
         # Creates a publisher based on the message type "String" that has been imported from the std_msgs module above
-        self.publisher_ = self.create_publisher(Twist, MOTOR_CHANNEL, 10)
+        self.publisher_ = self.create_publisher(Twist, channel, 10)
         # Sets initial counter to zero
         self.counter = 0
 
-    def publish_velocities(self):
+    def publish_velocities(self, display_count: bool = False):
         """
-        Publishes velocity values from API to motor channel.
+        Publishes velocity values from API to motor channel. Optional flag for
+        displaying publish count.
         """
         # Gets velocity components from API
         linear, angular = base_api.get_velocities("Linear", "Angular")
         # Defines velocity factors
         LINEAR_FACTOR = 0.2
-        ROTATIONAL_FACTOR = -1.5
+        ROTATIONAL_FACTOR = -1
 
         # Creates a Twist object
         new_twist = Twist()
@@ -54,7 +51,8 @@ class SimplePublisher(Node):
         # Publishes twist to topic
         self.publisher_.publish(new_twist)
         # Prints counter to console
-        self.get_logger().info(f"Publish #{self.counter + 1}")
+        if display_count:
+            self.get_logger().info(f"Publish #{self.counter + 1}")
         # Increments counter
         self.counter += 1
 
@@ -62,28 +60,18 @@ class SimplePublisher(Node):
 def main() -> None:
     # Initializes ROS2 communication and allows Nodes to be created
     rclpy.init(args=None)
-
-    # Creates the SimplePublisher Node
-    simple_publisher = SimplePublisher()
-
+    # Creates the SimplePublisher Node using the motor control channel
+    simple_publisher = SimplePublisher("cmd_vel")
     try:
-        # Spins the Node to activate the callbacks
-        # rclpy.spin(simple_publisher)
-
         while True:
-
-            simple_publisher.publish_velocities()
-
-            time.sleep(1)
-
+            # Publishes API velocities to motors
+            simple_publisher.publish_velocities(display_count=True)
+            time.sleep(2)
     # Stops the code if CNTL-C is pressed on the keyboard
     except KeyboardInterrupt:
-
         print("\nCaught Keyboard Interrupt")
-
         # Destroys the node that was created
         simple_publisher.destroy_node()
-
         # Shuts down rclpy
         rclpy.shutdown()
 

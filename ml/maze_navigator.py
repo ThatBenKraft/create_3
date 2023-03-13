@@ -12,7 +12,7 @@ MOVE_DISTANCE_FACTOR = 5
 TURN_LOOP_COUNT = 3
 
 MODEL_FILEPATH = "keras_model.h5"
-IMAGE_NAME = "sight_sample.jpg"
+SAMPLE_IMAGE_NAME = "sight_sample.jpg"
 
 LEFT = -1
 RIGHT = 1
@@ -38,17 +38,17 @@ def main():
 
         while True:
             # Takes picture and saves it to disk
-            image = preload_data(camera.take_picture())
+            image_data = camera.take_picture()
             # Writes image to disk if specified
             if WRITE_IMAGE:
-                cv2.imwrite(IMAGE_NAME, image)
+                cv2.imwrite(SAMPLE_IMAGE_NAME, image_data)
             # Creates a model
             ### TBD CONDITION TO ASSES IMAGES ###
             turn = True
 
             if turn:
                 # Acquires direction from model
-                direction = model.predict_direction(image)
+                direction = model.predict_direction(image_data)
                 # Turns that way
                 turn_direction(publisher, direction)
 

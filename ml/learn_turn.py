@@ -61,6 +61,8 @@ class ImageModel:
         )
         self.model = model
         self.class_directions = class_directions
+        # Makes a list of classes from keys to allow for indexing
+        self.classes = tuple(class_directions.keys())
 
     def predict_direction(self, image_data: ndarray) -> int:
         """
@@ -72,10 +74,8 @@ class ImageModel:
         prediction: ndarray = self.model.predict(resized_data)
         # Finds index of greatest probability
         predicted_class_index = int(np.argmax(prediction))
-        # Makes a list of classes from keys to allow for indexing
-        classes = tuple(self.class_directions.keys())
         # Acquires corresponding direction from class list
-        return self.class_directions[classes[predicted_class_index]]
+        return self.class_directions[self.classes[predicted_class_index]]
 
 
 def preload_data(image_data: ndarray, display: bool = False) -> ndarray:
@@ -91,7 +91,7 @@ def preload_data(image_data: ndarray, display: bool = False) -> ndarray:
 
     # Display the image if desired
     if display:
-        cv2.imshow("Original Image (BGR)", cv2.cvtColor(image_data, cv2.COLOR_BGR2HSV))
+        cv2.imshow("Original Image", cv2.cvtColor(image_data, cv2.COLOR_BGR2HSV))
         cv2.imshow("Resized Image", resized_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()

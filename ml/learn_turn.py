@@ -35,11 +35,23 @@ def main():
     model = ImageModel("keras_model.h5", CLASS_DIRECTIONS)
     # For each filepath
     for filepath in filepaths:
-
-        print(model.predict_direction(filepath))
+        # Checks for errors
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError(f"Image file {filepath} does not exist")
+        image = cv2.imread(filepath)
+        if image is None:
+            raise ValueError(f"Unable to load image file {filepath}")
+        # Acquires data from image as array
+        image_data = np.array(image)
+        # Predicts direction from image
+        print(model.predict_direction(image_data))
 
 
 class ImageModel:
+    """
+    Allows for use of h5 machine learning model for predictions.
+    """
+
     def __init__(self, filepath: str, class_directions: dict[str, int]) -> None:
         model: Model = load_model(filepath)  # type:ignore
         model.compile(
@@ -50,15 +62,14 @@ class ImageModel:
         self.model = model
         self.class_directions = class_directions
 
-    def predict_direction(self, filepath: str) -> int:
+    def predict_direction(self, image_data: ndarray) -> int:
         """
         Predicts which direction the image file corresponds to. Returns an
         integer representing a direction.
         """
-        # Acquires image info in correct format
-        image_data = load_image(filepath)
+        resized_data = preload_data(image_data)
         # Makes a prediction with model
-        prediction: ndarray = self.model.predict(image_data)
+        prediction: ndarray = self.model.predict(resized_data)
         # Finds index of greatest probability
         predicted_class_index = int(np.argmax(prediction))
         # Makes a list of classes from keys to allow for indexing
@@ -67,29 +78,20 @@ class ImageModel:
         return self.class_directions[classes[predicted_class_index]]
 
 
-def load_image(filename: str, display: bool = False) -> np.ndarray:
+def preload_data(image_data: ndarray, display: bool = False) -> ndarray:
     """
-    Prepares image for use in prediciton model through cropping and
+    Prepares data for use in prediciton model through cropping and
     normalization. Optional flag to display processed images.
     """
-    # Load the image using OpenCV
-    if not os.path.isfile(filename):
-        raise FileNotFoundError(f"Image file {filename} does not exist")
-    image = cv2.imread(filename)
-    if image is None:
-        raise ValueError(f"Unable to load image file {filename}")
-
-    # Resize the image to the desired size and crop from the center
     resized_image = cv2.resize(
-        image, (IMAGE_SIZE, IMAGE_SIZE), interpolation=cv2.INTER_AREA
+        image_data, (IMAGE_SIZE, IMAGE_SIZE), interpolation=cv2.INTER_AREA
     )
 
-    # Convert the image to a numpy array and normalize
     normalized_image_array = (resized_image.astype(np.float32) / 127.0) - 1
 
     # Display the image if desired
     if display:
-        cv2.imshow("Original Image", image)
+        cv2.imshow("Original Image (BGR)", cv2.cvtColor(image_data, cv2.COLOR_BGR2HSV))
         cv2.imshow("Resized Image", resized_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()

@@ -54,12 +54,15 @@ def take_picture(display: bool = False) -> ndarray:
     """
     Takes a picture and returns it as a numpy array.
     """
-    image: ndarray = picam.capture_array("main")
+    image = picam.capture_array("main")
 
     if display:
-        # Displays full resolution image
-        cv2.imshow("Raw Image", image)
+        # Converts the image from RGB to BGR format
+        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        # Display the image
+        cv2.imshow("Raw Image", image_bgr)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     return image
 

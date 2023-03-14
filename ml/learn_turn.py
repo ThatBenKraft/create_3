@@ -73,6 +73,7 @@ class ImageModel:
         # Makes a prediction with model
         prediction: ndarray = self.model.predict(resized_data)
         # Finds index of greatest probability
+        # max_confidence =
         predicted_class_index = int(np.argmax(prediction))
         # Acquires corresponding direction from class list
         return self.class_directions[self.classes[predicted_class_index]]

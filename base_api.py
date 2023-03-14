@@ -2,7 +2,11 @@
 Allows for access to the base API and fascilitates extraction.
 """
 
+import time
+
 import requests
+
+from publishers import MotorPublisher, rclpy
 
 __author__ = "Ben Kraft"
 __copyright__ = "None"
@@ -27,8 +31,31 @@ def main() -> None:
     """
     Runs default actions.
     """
-    # Prints sample velocities
-    print(get_velocities("Linear", "Angular"))
+    # Creates a MotorPublisher node
+    motor_publisher = MotorPublisher()
+    try:
+        # Defines factors
+        LINEAR_FACTOR = 0.2
+        ANGULAR_FACTOR = -1
+
+        while True:
+            # Gets velocity components from API
+            linear, angular = get_velocities("Linear", "Angular")
+            # Publishes API velocities to motors
+            motor_publisher.publish_velocities(
+                linear=linear * LINEAR_FACTOR,
+                angular=angular * ANGULAR_FACTOR,
+                display_count=True,
+            )
+            # Waits
+            time.sleep(2)
+    # Stops the code if CTRL-C is pressed on the keyboard
+    except KeyboardInterrupt:
+        print("\nCaught Keyboard Interrupt")
+        # Destroys the node that was created
+        motor_publisher.destroy_node()
+        # Shuts down rclpy
+        rclpy.shutdown()
 
 
 def get_velocities(*velocity_types: str) -> tuple[float, ...]:

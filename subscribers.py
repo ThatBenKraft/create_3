@@ -7,14 +7,13 @@ This file shows how to subscribe to a topic in ROS2 using the Create®3. It subs
 to the IR sensor and displays the relevant information in your terminal. 
 """
 
-import sys
+import time
+from statistics import mean
 
 import rclpy  # type: ignore
 from irobot_create_msgs.msg import IrIntensityVector  # type: ignore
 from rclpy.node import Node  # type: ignore
 from rclpy.qos import qos_profile_sensor_data  # type: ignore
-
-rclpy.init()
 
 
 class IRSubscriber(Node):
@@ -47,7 +46,7 @@ class IRSubscriber(Node):
         This callback function is basically printing what it hears. It runs the data
         it receives in your terminal (msg).
         """
-        print("Now listening to IR sensor readings it hears...")
+        # print("Now listening to IR sensor readings it hears...")
 
         self.printIR(msg)
 
@@ -61,9 +60,10 @@ class IRSubscriber(Node):
         To get components of a message, use the '.' dot operator.
         """
         print("Printing IR sensor readings:")
-        for reading in msg.readings:
-            val = reading.value
-            print("IR Sensor:" + str(val))
+        # Takes the average of the three middle sensor readings
+        average = mean(sensor.value for sensor in msg.readings[2:5])
+
+        print(round(average, 1))
 
 
 def main() -> None:
@@ -71,12 +71,13 @@ def main() -> None:
     rclpy.init()
     # Creates the node
     IR_subscriber = IRSubscriber()
-    """
-    The node is then "spun" so its callbacks are called.
-    """
+    # The node is then "spun" so its callbacks are called.
     print("Callbacks are called.")
     try:
-        rclpy.spin(IR_subscriber)
+        while True:
+            rclpy.spin_once(IR_subscriber)
+
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nCaught keyboard interrupt")
     finally:

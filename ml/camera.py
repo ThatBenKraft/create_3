@@ -5,10 +5,11 @@ Provides support for Picamera v3. Limited functionality: used to find a blue
 line and return error away from center of frame.
 """
 import os
+import sys
 import time
 
 import cv2
-from libcamera.controls import AfModeEnum  # type:ignore
+from libcamera import controls  # type:ignore
 from numpy import ndarray
 from picamera2 import Picamera2  # type:ignore
 
@@ -22,7 +23,7 @@ __email__ = "benjamin.kraft@tufts.edu"
 __status__ = "Prototype"
 
 picam = Picamera2()  # assigns camera variable
-picam.set_controls({"AfMode": AfModeEnum.Continuous})  # sets auto focus mode
+picam.set_controls({"AfMode": controls.AfModeEnum.Continuous})  # sets auto focus mode
 picam.start()  # activates camera
 
 
@@ -30,50 +31,46 @@ def main() -> None:
     """
     Runs default library acions.
     """
-    time.sleep(2)
+    time.sleep(1.5)
+
+    do_display = not "-d" in sys.argv
 
     iteration = 0
     # Acquires object from command line input
     object = input("\nEnter an object to be sampled: ")
-    destination_path = os.path.join("ml", "Samples", object)
+    destination_path = os.path.join("Samples", object)
     print(f"\nTaking picture samples for export in: [ {destination_path} ]\n")
 
     while True:
         # Input advance
         input("[Enter] to advance: ")
         # Takes picture and converts to color space
-        image_data = take_picture()
-        bgr_space = cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
-
+        _, image_bgr = take_picture(do_display)
         # Makes directory if does not already exist
         if not os.path.isdir(destination_path):
             os.mkdir(destination_path)
         # Creates a path for image to be written to
         image_path = os.path.join(destination_path, f"sample{iteration}.jpg")
-        cv2.imwrite(image_path, bgr_space)
+        cv2.imwrite(image_path, image_bgr)
         print(f"Wrote image to: [ {image_path} ]")
-        # Displays image
-        cv2.imshow("Latest Image", bgr_space)
-        cv2.waitKey(1)
 
         iteration += 1
 
 
-def take_picture(display: bool = False) -> ndarray:
+def take_picture(display: bool = False) -> tuple[ndarray, ndarray]:
     """
     Takes a picture and returns it as a numpy array.
     """
-    image = picam.capture_array("main")
+    image_data = picam.capture_array("main")
+    # Converts the image from RGB to BGR format for displays
+    image_bgr = cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
 
     if display:
-        # Converts the image from RGB to BGR format
-        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         # Display the image
         cv2.imshow("Raw Image", image_bgr)
         cv2.waitKey(1)
-        # cv2.destroyAllWindows()
 
-    return image
+    return image_data, image_bgr
 
 
 def crop(

@@ -1,10 +1,5 @@
 """
-sub_ir.py
-Tufts Create®3 Educational Robot Example
-by Kate Wujciak 
-
-This file shows how to subscribe to a topic in ROS2 using the Create®3. It subscribes
-to the IR sensor and displays the relevant information in your terminal. 
+Allows for use of ROS subscriber nodes. Includes IR subscriber.
 """
 
 import time
@@ -14,6 +9,15 @@ import rclpy  # type: ignore
 from irobot_create_msgs.msg import IrIntensityVector  # type: ignore
 from rclpy.node import Node  # type: ignore
 from rclpy.qos import qos_profile_sensor_data  # type: ignore
+
+__author__ = "Ben Kraft"
+__copyright__ = "None"
+__credits__ = "Ben Kraft, Kate Wujciak"
+__license__ = "MIT"
+__version__ = "1.0"
+__maintainer__ = "Ben Kraft"
+__email__ = "benjamin.kraft@tufts.edu"
+__status__ = "Prototype"
 
 
 class IRSubscriber(Node):
@@ -27,7 +31,7 @@ class IRSubscriber(Node):
         The following line calls the Node class' constructor and declares a node name,
         which is 'IR_subscriber' in this case.
         """
-        super().__init__("IR_Subscriber")
+        super().__init__("ir_subscriber")
         """
         This line indicates that the node is subscribing to the IrIntensityVector
         type over the '/ir_intensity' topic. 
@@ -46,7 +50,6 @@ class IRSubscriber(Node):
         This callback function is basically printing what it hears. It runs the data
         it receives in your terminal (msg).
         """
-        # print("Now listening to IR sensor readings it hears...")
         self.average_reading = mean(sensor.value for sensor in msg.readings[2:5])
 
     def get_average(self, display: bool = False) -> float:
@@ -66,13 +69,13 @@ def main() -> None:
     # Initializes the rclpy library
     rclpy.init()
     # Creates the node
-    IR_subscriber = IRSubscriber()
+    ir_sensor = IRSubscriber()
     # The node is then "spun" so its callbacks are called.
     try:
         while True:
             # rclpy.spin_once(IR_subscriber)
 
-            IR_subscriber.get_average(True)
+            ir_sensor.get_average(True)
 
             time.sleep(1)
     except KeyboardInterrupt:
@@ -81,7 +84,7 @@ def main() -> None:
         """Destroying the node acts as a "reset" so we don't run into
         any problems when we try and run again"""
         print("Done")
-        IR_subscriber.destroy_node()
+        ir_sensor.destroy_node()
         rclpy.shutdown()
 
 

@@ -2,6 +2,8 @@
 Acquires information from Airtable API and publishes to Create3 motor channel.
 """
 
+import time
+
 import rclpy  # type: ignore
 from geometry_msgs.msg import Twist  # type:ignore
 from rclpy.node import Node  # type: ignore
@@ -32,6 +34,10 @@ class MotorPublisher(Node):
         self.publisher_ = self.create_publisher(Twist, "cmd_vel", 10)
         # Sets initial counter to zero
         self.counter = 0
+        # Defines constants
+        self.TURN_DEGREE_FACTOR = 0.78
+        self.TURN_LOOP_COUNT = 4
+        self.MOVE_DISTANCE_FACTOR = 0.1
 
     def publish_velocities(
         self, linear: float, angular: float, display_count: bool = False
@@ -59,15 +65,48 @@ class MotorPublisher(Node):
         # Increments counter
         self.counter += 1
 
+    def turn_direction(self, direction: int) -> None:
+        """
+        Turns robot in specified direction.
+        """
+        for _ in range(self.TURN_LOOP_COUNT):
+            # Gives no linear and scaled angular velocity
+            self.publish_velocities(0.0, direction * self.TURN_DEGREE_FACTOR)
+            time.sleep(0.5)
+
+    def move_distance(self, distance: float):
+        """
+        Moves robot forward specified amount.
+        """
+        # Gives scaled linear and no angular velocity
+        self.publish_velocities(self.MOVE_DISTANCE_FACTOR * distance, 0.0)
+
 
 def main() -> None:
     """
     Runs default publisher actions using Airtable API.
     """
-    pass
+    motors = MotorPublisher()
+
+    # time.sleep(1)
+
+    # motors.move_distance(1)
+
+    time.sleep(1)
+
+    motors.turn_direction(-1)
+    motors.turn_direction(-1)
+
+    time.sleep(5)
+
+    motors.turn_direction(1)
+    motors.turn_direction(1)
+
+    # time.sleep(1)
+
+    # motors.move_distance(-1)
 
 
 if __name__ == "__main__":
     # Runs the main function
-    # main()
-    pass
+    main()

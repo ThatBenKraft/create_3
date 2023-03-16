@@ -57,7 +57,7 @@ def main() -> None:
         iteration += 1
 
 
-def take_picture(display: bool = False) -> tuple[ndarray, ndarray]:
+def take_picture(display: bool = False) -> ndarray:
     """
     Takes a picture and returns it as a numpy array.
     """
@@ -70,7 +70,7 @@ def take_picture(display: bool = False) -> tuple[ndarray, ndarray]:
         cv2.imshow("Raw Image", image_bgr)
         cv2.waitKey(1)
 
-    return image_data, image_bgr
+    return image_bgr
 
 
 def crop(

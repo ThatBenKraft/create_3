@@ -1,14 +1,11 @@
-import os
 import time
+from typing import Any
 
-import camera
+# import camera
 import cv2
 import numpy as np
 from keras.models import Model, load_model
 from numpy import ndarray
-from pyparsing import Any
-
-# Pluralsight.com
 
 # Disable scientific notation for clarity
 np.set_printoptions(suppress=True)
@@ -35,16 +32,16 @@ def main():
     """
     time.sleep(2)
 
-    model = ImageModel("keras_model.h5", tuple(CLASS_DIRECTIONS.keys()))
+    # model = ImageModel("keras_model.h5", tuple(CLASS_DIRECTIONS.keys()))
 
-    while True:
+    # while True:
 
-        _, image_data = camera.take_picture()
+    #     image_data = camera.take_picture()
 
-        predicted_class = model.predict_class(image_data)
+    #     predicted_class = model.predict_class(image_data)
 
-        print(f"Predicted object: {predicted_class}")
-        print(f"Predicted direction: {CLASS_DIRECTIONS[predicted_class]}")
+    #     print(f"Predicted object: {predicted_class}")
+    #     print(f"Predicted direction: {CLASS_DIRECTIONS[predicted_class]}")
 
 
 class ImageModel:

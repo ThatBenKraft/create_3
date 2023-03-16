@@ -47,23 +47,19 @@ class IRSubscriber(Node):
         it receives in your terminal (msg).
         """
         # print("Now listening to IR sensor readings it hears...")
+        self.average_reading = mean(sensor.value for sensor in msg.readings[2:5])
 
-        self.printIR(msg)
-
-    def printIR(self, msg):
-        """
-        This function is used in the above function. Its purpose is to determine
-        which parts of the info are worth showing.
-        :type msg: IrIntensity
-        :rtype: None
-        The msg is returned from our topic '/ir_intensity.'
-        To get components of a message, use the '.' dot operator.
-        """
-        print("Printing IR sensor readings:")
+    def get_average(self, display: bool = False) -> float:
         # Takes the average of the three middle sensor readings
-        average = mean(sensor.value for sensor in msg.readings[2:5])
 
-        print(round(average, 1))
+        rclpy.spin_once(self)
+
+        new_reading = round(self.average_reading, 1)
+
+        if display:
+            print(new_reading)
+
+        return new_reading
 
 
 def main() -> None:
@@ -72,10 +68,11 @@ def main() -> None:
     # Creates the node
     IR_subscriber = IRSubscriber()
     # The node is then "spun" so its callbacks are called.
-    print("Callbacks are called.")
     try:
         while True:
-            rclpy.spin_once(IR_subscriber)
+            # rclpy.spin_once(IR_subscriber)
+
+            IR_subscriber.get_average(True)
 
             time.sleep(1)
     except KeyboardInterrupt:

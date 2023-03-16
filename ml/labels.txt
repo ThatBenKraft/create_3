@@ -1,7 +1,0 @@
-0 Elephant
-1 Mario
-2 Mug
-3 Tractor
-4 Kiwi
-5 Rubiks
-6 Bear

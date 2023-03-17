@@ -8,18 +8,19 @@ from subscribers import IRSubscriber
 
 STOP_DISTANCE = 110
 OBJECT_COUNT = 7
+BACKUP_DISTANCE = 2
 
 LEFT = 1
 RIGHT = -1
 
 CLASS_DIRECTIONS = {
-    "elephant": LEFT,
-    "mario": LEFT,
-    "mug": RIGHT,
-    "tractor": RIGHT,
+    "elephant": RIGHT,
+    "mario": RIGHT,
+    "mug": LEFT,
+    "tractor": LEFT,
     "kiwi": LEFT,
     "rubiks": RIGHT,
-    "bear": LEFT,
+    "bear": RIGHT,
 }
 
 WIN_SONG = os.path.join("music", "Test Robot Song.mid")
@@ -49,7 +50,7 @@ def main():
         # If distance is less than specified stopping:
         if average_distance >= STOP_DISTANCE:
             # Move back
-            motors.move_distance(-3)
+            motors.move_distance(-BACKUP_DISTANCE)
             time.sleep(1)
             # Take a picture
             print("Taking picture...")
@@ -57,7 +58,7 @@ def main():
             image_data = camera.take_picture()
             time.sleep(1)
             # Move forward
-            motors.move_distance(3)
+            motors.move_distance(BACKUP_DISTANCE)
             # Predict class from image
             predicted_class = image_model.predict_class(image_data)
             midi.play_sequence(ALERT_SONG)
@@ -72,7 +73,7 @@ def main():
         # If no wall/object seen:
         else:
             # Move forward
-            travel = 3 if average_distance < STOP_DISTANCE / 3 else 1
+            travel = 2 if average_distance < STOP_DISTANCE / 3 else 1
             motors.move_distance(travel)
 
         time.sleep(1)
@@ -82,7 +83,7 @@ def win_sequence(motors: MotorPublisher, midi: MidiPublisher) -> None:
 
     print("MAZE COMPLETED!!!")
 
-    motors.move_distance(3)
+    motors.move_distance(5)
 
     time.sleep(1)
 

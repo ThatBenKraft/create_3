@@ -1,7 +1,7 @@
+import os
 import time
 from typing import Any
 
-# import camera
 import cv2
 import numpy as np
 from keras.models import Model, load_model
@@ -12,36 +12,39 @@ np.set_printoptions(suppress=True)
 
 IMAGE_SIZE = 224
 
-LEFT = -1
-RIGHT = 1
-
-CLASS_DIRECTIONS = {
-    "elephant": LEFT,
-    "mario": LEFT,
-    "mug": RIGHT,
-    "tractor": RIGHT,
-    "kiwi": LEFT,
-    "rubiks": RIGHT,
-    "bear": RIGHT,
-}
-
 
 def main():
     """
     Runs default actions.
     """
+    LEFT = -1
+    RIGHT = 1
+    SAMPLE_PATH = "Samples"
+
+    CLASS_DIRECTIONS = {
+        "elephant": LEFT,
+        "mario": LEFT,
+        "mug": RIGHT,
+        "tractor": RIGHT,
+        "kiwi": LEFT,
+        "rubiks": RIGHT,
+        "bear": RIGHT,
+    }
+
     time.sleep(2)
 
-    # model = ImageModel("keras_model.h5", tuple(CLASS_DIRECTIONS.keys()))
+    model = ImageModel("keras_model.h5", tuple(CLASS_DIRECTIONS.keys()))
+    # For each file in sample directory:
+    for file in os.listdir(SAMPLE_PATH):
+        # Get image data into array
+        image_data = cv2.imread(os.path.join(SAMPLE_PATH, file))
+        # Preduct the class
+        predicted_class = model.predict_class(image_data)
 
-    # while True:
+        print(f"Predicted object: {predicted_class}")
+        print(f"Predicted direction: {CLASS_DIRECTIONS[predicted_class]}")
 
-    #     image_data = camera.take_picture()
-
-    #     predicted_class = model.predict_class(image_data)
-
-    #     print(f"Predicted object: {predicted_class}")
-    #     print(f"Predicted direction: {CLASS_DIRECTIONS[predicted_class]}")
+        time.sleep(1)
 
 
 class ImageModel:

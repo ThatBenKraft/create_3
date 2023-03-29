@@ -53,6 +53,9 @@ class ImageModel:
     """
 
     def __init__(self, filepath: str, classes: tuple[Any]) -> None:
+        """
+        Sets up image model by loading keras and compiling.
+        """
         model: Model = load_model(filepath)  # type:ignore
         model.compile(
             loss="binary_crossentropy",
@@ -85,19 +88,18 @@ def preload_data(image_data: ndarray, display: bool = False) -> ndarray:
     Prepares data for use in prediciton model through cropping and
     normalization. Optional flag to display processed images.
     """
+    # Resizes image to appropriate scale
     resized_image = cv2.resize(
         image_data, (IMAGE_SIZE, IMAGE_SIZE), interpolation=cv2.INTER_AREA
     )
-
+    # Normalizes array
     normalized_image_array = (resized_image.astype(np.float32) / 127.0) - 1
-
-    # Display the image if desired
+    # Displays the image if desired
     if display:
         cv2.imshow("Original Image", cv2.cvtColor(image_data, cv2.COLOR_BGR2HSV))
         cv2.imshow("Resized Image", resized_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
     # Return the normalized image as a numpy array of shape (1, 224, 224, 3)
     return np.expand_dims(normalized_image_array, axis=0)
 

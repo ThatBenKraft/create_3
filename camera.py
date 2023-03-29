@@ -41,20 +41,24 @@ def main() -> None:
     destination_path = os.path.join("Samples", object)
     print(f"\nTaking picture samples for export in: [ {destination_path} ]\n")
 
-    while True:
-        # Input advance
-        input("[Enter] to advance: ")
-        # Takes picture and converts to color space
-        _, image_bgr = take_picture(do_display)
-        # Makes directory if does not already exist
-        if not os.path.isdir(destination_path):
-            os.mkdir(destination_path)
-        # Creates a path for image to be written to
-        image_path = os.path.join(destination_path, f"sample{iteration}.jpg")
-        cv2.imwrite(image_path, image_bgr)
-        print(f"Wrote image to: [ {image_path} ]")
+    try:
+        while True:
+            # Input advance
+            input("[Enter] to advance: ")
+            # Takes picture and converts to color space
+            image_bgr = take_picture(do_display)
+            # Makes directory if does not already exist
+            if not os.path.isdir(destination_path):
+                os.mkdir(destination_path)
+            # Creates a path for image to be written to
+            image_path = os.path.join(destination_path, f"sample_{iteration}.jpg")
+            cv2.imwrite(image_path, image_bgr)
+            print(f"Wrote image to: [ {image_path} ]")
 
-        iteration += 1
+            iteration += 1
+
+    except KeyboardInterrupt:
+        print("")
 
 
 def take_picture(display: bool = False) -> ndarray:
@@ -86,7 +90,4 @@ def crop(
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("")
+    main()

@@ -1,7 +1,7 @@
 import os
 import time
 
-from ml import camera
+import camera
 from ml.modeling import ImageModel
 from publishers import MidiPublisher, MotorPublisher
 from subscribers import IRSubscriber
@@ -54,14 +54,14 @@ def main():
             time.sleep(1)
             # Take a picture
             print("Taking picture...")
-            midi.play_sequence(ALERT_SONG)
+            midi.play_track(ALERT_SONG)
             image_data = camera.take_picture()
             time.sleep(1)
             # Move forward
             motors.move_distance(BACKUP_DISTANCE)
             # Predict class from image
             predicted_class = image_model.predict_class(image_data)
-            midi.play_sequence(ALERT_SONG)
+            midi.play_track(ALERT_SONG)
             predicted_direction = CLASS_DIRECTIONS[predicted_class]
             print(f"Predicted object: {predicted_class}")
             direction_name = "LEFT" if predicted_direction == 1 else "RIGHT"
@@ -87,7 +87,7 @@ def win_sequence(motors: MotorPublisher, midi: MidiPublisher) -> None:
 
     time.sleep(1)
 
-    midi.play_sequence(WIN_SONG)
+    midi.play_track(WIN_SONG)
 
     for _ in range(8):
         motors.turn_direction(1)

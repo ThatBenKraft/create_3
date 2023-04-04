@@ -22,11 +22,10 @@ __status__ = "Prototype"
 
 class IRSubscriber(Node):
     """
-    The IRSubscriber class is created which is a subclass of Node.
-    The Node is subscribing to the /ir_intensity topic.
+    Allows for a subscription to the /ir_intensity topic.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         The following line calls the Node class' constructor and declares a node name,
         which is 'IR_subscriber' in this case.
@@ -43,14 +42,13 @@ class IRSubscriber(Node):
             qos_profile_sensor_data,
         )
 
-    def listener_callback(self, msg: IrIntensityVector):
+    def listener_callback(self, message: IrIntensityVector) -> None:
         """
-        The subscriber's callback listens and as soon as it receives the message,
-        this function runs.
-        This callback function is basically printing what it hears. It runs the data
-        it receives in your terminal (msg).
+        The subscriber's callback listens and as soon as it receives the
+        message, this function runs.
         """
-        self.average_reading = mean(sensor.value for sensor in msg.readings[2:5])
+        # Gets the average of the middle three sensors
+        self.average_reading = mean(sensor.value for sensor in message.readings[2:5])
 
     def get_average(self, display: bool = False) -> float:
         # Takes the average of the three middle sensor readings
@@ -73,16 +71,13 @@ def main() -> None:
     # The node is then "spun" so its callbacks are called.
     try:
         while True:
-            # rclpy.spin_once(IR_subscriber)
-
+            # Prints reading found
             ir_sensor.get_average(True)
-
             time.sleep(1)
+
     except KeyboardInterrupt:
         print("\nCaught keyboard interrupt")
     finally:
-        """Destroying the node acts as a "reset" so we don't run into
-        any problems when we try and run again"""
         print("Done")
         ir_sensor.destroy_node()
         rclpy.shutdown()

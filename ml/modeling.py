@@ -1,3 +1,7 @@
+"""
+Allows for use of Keras ML image modeling. Includes ImageModel class with 
+prediction capabilities.
+"""
 import os
 import time
 from typing import Any

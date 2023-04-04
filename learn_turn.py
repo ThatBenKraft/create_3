@@ -22,15 +22,16 @@ CLASS_DIRECTIONS = {
     "rubiks": RIGHT,
     "bear": RIGHT,
 }
-
-WIN_SONG = os.path.join("music", "Test Robot Song.mid")
+# Creates various publishers
+WIN_SONG = os.path.join("music", "Victory Robot Song.mid")
 ALERT_SONG = os.path.join("music", "Alert Robot Sound.mid")
+midi = MidiPublisher(1, WIN_SONG, ALERT_SONG)
 
 keras_filepath = os.path.join("ml", "keras_model.h5")
 image_model = ImageModel(keras_filepath, tuple(CLASS_DIRECTIONS.keys()))
+
 motors = MotorPublisher()
 ir_sensors = IRSubscriber()
-midi = MidiPublisher(WIN_SONG, ALERT_SONG)
 
 
 def main():
@@ -45,10 +46,10 @@ def main():
             win_sequence(motors, midi)
             break
         # Get IR sensor readings
-        average_distance = ir_sensors.get_average()
-        print(f"Average distance: {average_distance}")
+        front_distance = ir_sensors.get_average()
+        print(f"Average front distance: {front_distance}")
         # If distance is less than specified stopping:
-        if average_distance >= STOP_DISTANCE:
+        if front_distance >= STOP_DISTANCE:
             # Move back
             motors.move_distance(-BACKUP_DISTANCE)
             time.sleep(1)
@@ -72,8 +73,8 @@ def main():
             object_count += 1
         # If no wall/object seen:
         else:
-            # Move forward
-            travel = 2 if average_distance < STOP_DISTANCE / 3 else 1
+            # Move forward at variable speed
+            travel = 2 if front_distance < STOP_DISTANCE / 3 else 1
             motors.move_distance(travel)
 
         time.sleep(1)
@@ -90,7 +91,7 @@ def win_sequence(motors: MotorPublisher, midi: MidiPublisher) -> None:
     midi.play_track(WIN_SONG)
 
     for _ in range(8):
-        motors.turn_direction(1)
+        motors.turn_direction(LEFT)
 
 
 if __name__ == "__main__":

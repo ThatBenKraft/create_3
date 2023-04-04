@@ -29,14 +29,25 @@ def main() -> None:
     Runs default publisher actions.
     """
 
-    WIN_SONG = os.path.join("music", "Test Robot Song.mid")
+    # WIN_SONG = os.path.join("music", "Victory Robot Song.mid")
     ALERT_SONG = os.path.join("music", "Alert Robot Sound.mid")
-    PIRATE_SONG = os.path.join("music", "pirate.mid")
+    # PIRATE_SONG = os.path.join("music", "pirate.mid")
+    midi = MidiPublisher()
+    midi.add_song(ALERT_SONG)
 
-    midi = MidiPublisher(1, PIRATE_SONG)
+    RUNTIME = 2_000_000_000
+    track_a = AudioNoteVector()
+    track_a.notes.append(midi.create_note(200, RUNTIME))
+    track_b = AudioNoteVector()
+    track_b.notes.append(midi.create_note(250, RUNTIME))
 
+    song = (track_a, track_b)
+
+    TEST = "test_song"
+    midi.songs[TEST] = song
     time.sleep(1)
-    midi.play_track(PIRATE_SONG)
+    midi.play_track(TEST, 0)
+    midi.play_track(TEST, 1)
 
 
 class MotorPublisher(Node):
@@ -59,7 +70,7 @@ class MotorPublisher(Node):
 
     def publish_velocities(
         self, linear: float, angular: float, display_count: bool = False
-    ):
+    ) -> None:
         """
         Publishes velocity values from API to motor channel. Optional flag for
         displaying publish count.
@@ -96,7 +107,7 @@ class MotorPublisher(Node):
             self.publish_velocities(0.0, direction * self.TURN_DEGREE_FACTOR)
             time.sleep(0.5)
 
-    def move_distance(self, distance: int):
+    def move_distance(self, distance: int) -> None:
         """
         Moves robot forward specified amount.
         """
@@ -113,119 +124,63 @@ class MidiPublisher(Node):
     Allows for publication of midi events to audio channel.
     """
 
-    def __init__(self, separation_length: int = 1, *midi_filepaths: str) -> None:
+    def __init__(self, gap_duration: int = 1, *midi_filepaths: str) -> None:
         """
-        Initializes midi publisher with specified separation length and midi
+        Initializes midi publisher with specified gap duration and midi
         files.
         """
         # Runs default node initializations with created name
         super().__init__("midi_publisher")
         # Creates a publisher through which audio information can be sent
         self.publisher_ = self.create_publisher(AudioNoteVector, "cmd_audio", 10)
-        # Creates a dictionary of filepaths and converted note vectors
-        self.vector_bundles: dict[str, list[AudioNoteVector]] = {}
+        # Creates a dictionary of filepaths and track vectors
+        self.songs: dict[str, tuple[AudioNoteVector, ...]] = {}
         # For each path specified:
         for filepath in midi_filepaths:
             # Adds to track bundle dictionary
-            self.add_file(filepath)
-        # Assigns separation length
-        self.SEPARATION_LENGTH = separation_length
+            self.add_song(filepath)
+        # Assigns gap duration
+        self.GAP_DURATION = gap_duration
 
-    def add_file(self, midi_filepath: str):
+    def add_song(self, midi_filepath: str) -> None:
         """
-        Adds a midi file to publisher's accessible track bundle dictionary.
+        Adds a midi file to publisher's accessible songs.
         """
         # Readies midi data from path
         midi_data = mido.MidiFile(midi_filepath)
-        # Initiates a track bundle
-        vector_bundle: list[AudioNoteVector] = []
+        # Initiates a track list
+        song: list[AudioNoteVector] = []
         # For each track in midi data:
-        for track in midi_data.tracks:
-            # Converts track data into custom audio vector
-            vector = self._create_vector(track, midi_data.ticks_per_beat)
+        for midi_track in midi_data.tracks:
+            # Converts midi track data into custom audio vector
+            track = self._build_track(midi_track, midi_data.ticks_per_beat)
             # If there are any notes in the vector:
-            if vector.notes:
-                # Add vector to bundle
-                vector_bundle.append(vector)
-        # If bundle contains any tracks with notes:
-        if vector_bundle:
-            # Adds to dictionary of bundles
-            self.vector_bundles[midi_filepath] = vector_bundle
+            if track.notes:
+                # Add track vector to song
+                song.append(track)
+        # If song contains any vectors with notes:
+        if song:
+            # Adds track list to dictionary of songs
+            self.songs[midi_filepath] = tuple(song)
         else:
             print(
                 f"WARNING: {midi_filepath} contains no tracks with notes! Was not added to bundles."
             )
 
-    # def _create_vector(self, track: list, ticks_per_beat: int) -> AudioNoteVector:
-    #     """
-    #     Converts midi track into AudioNoteVector.
-    #     """
-    #     # Sets default tempo of 120BPM
-    #     microseconds_per_beat = 500000
-
-    #     # Iterates through messages to find track / note info
-    #     raw_sequence: list[tuple[int, int]] = []
-    #     # For each message within the first track:
-    #     for message in track:
-    #         # If tempo message:
-    #         if message.type == "set_tempo":
-    #             # Assigns microseconds per beat
-    #             microseconds_per_beat: int = message.tempo
-    #         # If note message:
-    #         elif message.type == "note_on":
-    #             # Calculates frequency from note value or sets to 0 if no velocity
-    #             frequency = (
-    #                 440 * (2 ** ((message.note - 69) / 12)) if message.velocity else 0
-    #             )
-    #             # Bundles with time and addes to raw note sequence
-    #             raw_sequence.append((int(frequency), message.time))
-    #     # Calculates nanoseconds per tick
-    #     nanoseconds_per_tick = int(microseconds_per_beat / ticks_per_beat * 1e3)
-    #     print(raw_sequence)
-    #     # Sets up values to use in note creation loop
-    #     sequence_length = len(raw_sequence)
-    #     note_sequence: list[AudioNote] = []
-    #     # For each raw note
-    #     for index, raw_note in enumerate(raw_sequence):
-    #         # Looks at the next raw note's delta time and uses it as the
-    #         # current note's duration
-    #         next_index = index + 1
-    #         next_duration_ticks = (
-    #             raw_sequence[next_index][1]
-    #             if next_index < sequence_length
-    #             else raw_note[1]
-    #         )
-    #         # Creates note object
-    #         note = AudioNote()
-    #         note.frequency = raw_note[0]
-    #         # Creates duration object
-    #         duration = Duration()
-    #         duration.sec = 0
-    #         duration.nanosec = next_duration_ticks * nanoseconds_per_tick
-    #         note.max_runtime = duration
-    #         # Adds note to sequence
-    #         note_sequence.append(note)
-    #     # Creates note vector object
-    #     note_vector = AudioNoteVector()
-    #     note_vector.header.stamp = rclpy.time.Time().to_msg()
-    #     note_vector.notes = note_sequence
-
-    #     return note_vector
-
-    def _create_vector(self, track: list, ticks_per_beat: int) -> AudioNoteVector:
+    def _build_track(self, midi_track: list, ticks_per_beat: int) -> AudioNoteVector:
         """
         Converts midi track into AudioNoteVector object. Optional flag for
-        separation notes.
+        gap notes.
         """
-        # Calculates nanoseconds per beat from microseconds per beat
+        # Calculates nanoseconds per tick from default microseconds per beat
         nanoseconds_per_tick = int(500000 / ticks_per_beat * 1e3)
         previous_frequency = 0
         delta_time = 0.0
-        # Creates note vector object
-        note_vector = AudioNoteVector()
-        note_vector.header.stamp = rclpy.time.Time().to_msg()
+        # Creates note vector object for a track
+        track = AudioNoteVector()
+        track.header.stamp = rclpy.time.Time().to_msg()
         # For each message in track:
-        for message in track:
+        for message in midi_track:
             # Adds message time to delta time
             delta_time += message.time
             # If tempo message:
@@ -235,27 +190,18 @@ class MidiPublisher(Node):
             # If note event message:
             if message.type in ("note_on", "note_off"):
                 # Defines duration of seperation note
-                separation_length = float(
-                    self.SEPARATION_LENGTH * (delta_time > self.SEPARATION_LENGTH)
+                gap_duration = int(self.GAP_DURATION * (delta_time > self.GAP_DURATION))
+                # Addes gap note to vector
+                track.notes.append(
+                    self.create_note(0, gap_duration * nanoseconds_per_tick)
                 )
-                # Addes separation note to vector
-                separation_note = AudioNote()
-                separation_note.frequency = 0
-                separation_duration = Duration()
-                separation_duration.sec = 0
-                separation_duration.nanosec = separation_length * nanoseconds_per_tick
-                separation_note.max_runtime = separation_duration
-                note_vector.notes.append(separation_note)
                 # Addes previous note to vector
-                previous_note = AudioNote()
-                previous_note.frequency = previous_frequency
-                previous_duration = Duration()
-                previous_duration.sec = 0
-                previous_duration.nanosec = (
-                    delta_time - separation_length
-                ) * nanoseconds_per_tick
-                previous_note.max_runtime = previous_duration
-                note_vector.notes.append(previous_note)
+                track.notes.append(
+                    self.create_note(
+                        previous_frequency,
+                        (delta_time - gap_duration) * nanoseconds_per_tick,
+                    )
+                )
                 # Sets previous frequency to current by converting from midi note
                 previous_frequency = int(
                     bool(message.velocity) * 440 * 2 ** ((message.note - 69) / 12)
@@ -263,8 +209,21 @@ class MidiPublisher(Node):
                 # Resets delta time
                 delta_time = 0.0
 
-        print(f"Track notes: {note_vector.notes}")
-        return note_vector
+        print(f"Track notes: {track.notes}")
+        return track
+
+    def create_note(self, frequency: int, nanosecond_runtime: int) -> AudioNote:
+        """
+        Utility function that creates note through AudioNote and Duration
+        objects.
+        """
+        runtime = Duration()
+        runtime.sec = 0
+        runtime.nanosec = nanosecond_runtime
+        note = AudioNote()
+        note.frequency = frequency
+        note.max_runtime = runtime
+        return note
 
     def play_track(self, midi_filepath: str, track_number: int = 0) -> None:
         """
@@ -272,15 +231,15 @@ class MidiPublisher(Node):
         """
 
         # If filepath not in note vector list:
-        if midi_filepath not in self.vector_bundles:
+        if midi_filepath not in self.songs:
             raise ValueError("Sequence does not exist for specified filepath.")
         # Acquires vector bundle from list
-        bundle = self.vector_bundles[midi_filepath]
+        song = self.songs[midi_filepath]
         # If track number does not exist:
-        if not (0 <= track_number < len(bundle)):
+        if not (0 <= track_number < len(song)):
             raise ValueError("Track number does not exist for specified filepath.")
         # Publish the vector
-        self.publisher_.publish(bundle[track_number])
+        self.publisher_.publish(song[track_number])
 
 
 if __name__ == "__main__":

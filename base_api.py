@@ -5,7 +5,6 @@ Allows for access to the base API and fascilitates extraction.
 import time
 
 import requests
-
 from publishers import MotorPublisher, rclpy
 
 __author__ = "Ben Kraft"
@@ -22,9 +21,7 @@ BASE_ID = "appWNQwSNORmWZJQH"
 TABLE_NAME = "Robot Data"
 API_KEY = input("Enter Airtable API Key: ")
 # Builds API url
-URL = (
-    "https://api.airtable.com/v0/" + BASE_ID + "/" + TABLE_NAME + "?api_key=" + API_KEY
-)
+URL = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}?api_key={API_KEY}"
 
 
 def main() -> None:

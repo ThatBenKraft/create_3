@@ -68,7 +68,7 @@ def main():
             direction_name = "LEFT" if predicted_direction == 1 else "RIGHT"
             print(f"Predicted direction: {direction_name}")
             # Move in predicted direction
-            motors.turn_direction(predicted_direction)
+            motors.turn_degrees(predicted_direction)
             # Increment number of objects seen
             object_count += 1
         # If no wall/object seen:
@@ -91,7 +91,7 @@ def win_sequence(motors: MotorPublisher, midi: MidiPublisher) -> None:
     midi.play_track(WIN_SONG)
 
     for _ in range(8):
-        motors.turn_direction(LEFT)
+        motors.turn_degrees(LEFT)
 
 
 if __name__ == "__main__":

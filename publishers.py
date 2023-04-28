@@ -1,6 +1,7 @@
 """
 Allows for use of ROS publisher nodes. Includes motor and midi publishers.
 """
+import math
 import os
 import time
 
@@ -33,21 +34,26 @@ def main() -> None:
     ALERT_SONG = os.path.join("music", "Alert Robot Sound.mid")
     # PIRATE_SONG = os.path.join("music", "pirate.mid")
     midi = MidiPublisher()
-    midi.add_song(ALERT_SONG)
+    # midi.add_song(ALERT_SONG)
 
     RUNTIME = 2_000_000_000
     track_a = AudioNoteVector()
-    track_a.notes.append(midi.create_note(200, RUNTIME))
+    track_a.notes.append(midi.create_note(300, RUNTIME))
     track_b = AudioNoteVector()
     track_b.notes.append(midi.create_note(250, RUNTIME))
 
-    song = (track_a, track_b)
+    song = (track_a,)
+
+    # midi.play_track(ALERT_SONG)
 
     TEST = "test_song"
     midi.songs[TEST] = song
-    time.sleep(1)
+    print(midi.songs)
+    # time.sleep(1)
     midi.play_track(TEST, 0)
-    midi.play_track(TEST, 1)
+
+    time.sleep(10)
+    # midi.play_track(TEST, 1)
 
 
 class MotorPublisher(Node):
@@ -64,8 +70,8 @@ class MotorPublisher(Node):
         # Sets initial counter to zero
         self.counter = 0
         # Defines constants
-        self.TURN_DEGREE_FACTOR = 0.78
-        self.TURN_LOOP_COUNT = 4
+        self.TURN_DEGREE_FACTOR = 30
+        self.TURN_LOOP_FACTOR = 30
         self.MOVE_DISTANCE_FACTOR = 0.1
 
     def publish_velocities(
@@ -78,16 +84,9 @@ class MotorPublisher(Node):
         # Creates a Twist object
         new_twist = Twist()
 
-        print(
-            f"Twist things: x:{new_twist.linear.x}   y:{new_twist.linear.y}   z:{new_twist.linear.z}"
-        )
         # Assigns linear velocity components
         new_twist.linear.x = linear
-        new_twist.linear.y = 0.0
-        new_twist.linear.z = 0.0
         # Assigns angular velocity components
-        new_twist.angular.x = 0.0
-        new_twist.angular.y = 0.0
         new_twist.angular.z = angular
 
         # Publishes twist to topic
@@ -98,14 +97,25 @@ class MotorPublisher(Node):
         # Increments counter
         self.counter += 1
 
-    def turn_direction(self, direction: int) -> None:
+    def turn_degrees(self, degrees: int) -> None:
         """
         Turns robot in specified direction.
         """
-        for _ in range(self.TURN_LOOP_COUNT):
+        # Records sign of degrees
+        sign = math.copysign(1, degrees)
+        # Finds divisor and remainder
+        loops, remainder = divmod(abs(degrees), self.TURN_LOOP_FACTOR)
+
+        print(f"loops {loops} remainder {remainder}")
+        # Runs loop movement
+        for _ in range(loops):
             # Gives no linear and scaled angular velocity
-            self.publish_velocities(0.0, direction * self.TURN_DEGREE_FACTOR)
+            self.publish_velocities(
+                0.0, sign * self.TURN_LOOP_FACTOR / self.TURN_DEGREE_FACTOR
+            )
             time.sleep(0.5)
+        # Runs remainder movement
+        self.publish_velocities(0.0, sign * remainder / self.TURN_DEGREE_FACTOR)
 
     def move_distance(self, distance: int) -> None:
         """
@@ -209,7 +219,7 @@ class MidiPublisher(Node):
                 # Resets delta time
                 delta_time = 0.0
 
-        print(f"Track notes: {track.notes}")
+        # print(f"Track notes: {track.notes}")
         return track
 
     def create_note(self, frequency: int, nanosecond_runtime: int) -> AudioNote:
@@ -218,10 +228,9 @@ class MidiPublisher(Node):
         objects.
         """
         runtime = Duration()
-        runtime.sec = 0
-        runtime.nanosec = nanosecond_runtime
+        runtime.nanosec = int(nanosecond_runtime)
         note = AudioNote()
-        note.frequency = frequency
+        note.frequency = int(frequency)
         note.max_runtime = runtime
         return note
 
@@ -239,6 +248,7 @@ class MidiPublisher(Node):
         if not (0 <= track_number < len(song)):
             raise ValueError("Track number does not exist for specified filepath.")
         # Publish the vector
+        print(song[track_number])
         self.publisher_.publish(song[track_number])
 
 
